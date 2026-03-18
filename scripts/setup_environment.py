@@ -44,6 +44,12 @@ class SkillEnvironment:
             print("   Install it from: https://docs.astral.sh/uv/getting-started/installation/")
             return False
 
+        # Ensure pyproject.toml exists before attempting to sync dependencies
+        if not self.pyproject_file.exists():
+            print("❌ pyproject.toml not found in skill directory.")
+            print(f"   Expected at: {self.pyproject_file}")
+            return False
+
         # Run uv sync to create/update the venv from pyproject.toml + uv.lock
         print("📦 Syncing dependencies with uv...")
         try:
