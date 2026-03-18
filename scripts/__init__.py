@@ -45,11 +45,17 @@ def ensure_venv_and_run():
             sys.exit(1)
 
         # Sync dependencies using uv (creates .venv and installs from pyproject.toml + uv.lock)
-        subprocess.run(
-            [uv_cmd, "sync"],
-            cwd=str(skill_dir),
-            check=True,
-        )
+        try:
+            subprocess.run(
+                [uv_cmd, "sync"],
+                cwd=str(skill_dir),
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            print("❌ Failed to set up environment using uv.")
+            print(f"   Command exited with status {e.returncode}.")
+            print(f"   Try running 'uv sync' manually in: {skill_dir}")
+            sys.exit(e.returncode or 1)
 
         # Also install Chrome for Patchright
         print("   Setting up browser automation...")
