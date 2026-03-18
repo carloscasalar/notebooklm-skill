@@ -183,7 +183,7 @@ The virtual environment is automatically managed:
 Manual setup (only if automatic fails):
 ```bash
 uv sync
-python -m patchright install chrome
+uv run python -m patchright install chrome
 ```
 
 ## Data Storage
