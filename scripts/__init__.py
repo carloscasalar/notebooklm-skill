@@ -42,7 +42,7 @@ def ensure_venv_and_run():
         if not uv_cmd:
             print("❌ uv is required but not found.")
             print("   Install it from: https://docs.astral.sh/uv/getting-started/installation/")
-            return
+            sys.exit(1)
 
         # Sync dependencies using uv (creates .venv and installs from pyproject.toml + uv.lock)
         subprocess.run(
