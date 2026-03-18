@@ -74,6 +74,12 @@ class SkillEnvironment:
                 print("✅ Chrome installed")
             except subprocess.CalledProcessError as e:
                 print(f"⚠️ Warning: Failed to install Chrome: {e}")
+                if e.stdout:
+                    print("   --- patchright stdout ---")
+                    print(e.stdout)
+                if e.stderr:
+                    print("   --- patchright stderr ---")
+                    print(e.stderr)
                 print("   You may need to run manually: python -m patchright install chrome")
                 print("   Chrome is required (not Chromium) for reliability!")
 
