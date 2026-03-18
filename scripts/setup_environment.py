@@ -1,97 +1,92 @@
 #!/usr/bin/env python3
 """
 Environment Setup for NotebookLM Skill
-Manages virtual environment and dependencies automatically
+Manages virtual environment and dependencies automatically using uv
 """
 
 import os
 import sys
+import shutil
 import subprocess
-import venv
 from pathlib import Path
 
 
 class SkillEnvironment:
-    """Manages skill-specific virtual environment"""
+    """Manages skill-specific virtual environment via uv"""
 
     def __init__(self):
         # Skill directory paths
         self.skill_dir = Path(__file__).parent.parent
         self.venv_dir = self.skill_dir / ".venv"
-        self.requirements_file = self.skill_dir / "requirements.txt"
+        self.pyproject_file = self.skill_dir / "pyproject.toml"
 
         # Python executable in venv
         if os.name == 'nt':  # Windows
             self.venv_python = self.venv_dir / "Scripts" / "python.exe"
-            self.venv_pip = self.venv_dir / "Scripts" / "pip.exe"
         else:  # Unix/Linux/Mac
             self.venv_python = self.venv_dir / "bin" / "python"
-            self.venv_pip = self.venv_dir / "bin" / "pip"
+
+    def _find_uv(self) -> str | None:
+        """Find the uv executable"""
+        return shutil.which("uv")
 
     def ensure_venv(self) -> bool:
-        """Ensure virtual environment exists and is set up"""
+        """Ensure virtual environment exists and is set up using uv"""
 
         # Check if we're already in the correct venv
         if self.is_in_skill_venv():
             print("✅ Already running in skill virtual environment")
             return True
 
-        # Create venv if it doesn't exist
-        if not self.venv_dir.exists():
-            print(f"🔧 Creating virtual environment in {self.venv_dir.name}/")
-            try:
-                venv.create(self.venv_dir, with_pip=True)
-                print("✅ Virtual environment created")
-            except Exception as e:
-                print(f"❌ Failed to create venv: {e}")
-                return False
+        uv_cmd = self._find_uv()
+        if not uv_cmd:
+            print("❌ uv is required but not found.")
+            print("   Install it from: https://docs.astral.sh/uv/getting-started/installation/")
+            return False
 
-        # Install/update dependencies
-        if self.requirements_file.exists():
-            print("📦 Installing dependencies...")
+        # Ensure pyproject.toml exists before attempting to sync dependencies
+        if not self.pyproject_file.exists():
+            print("❌ pyproject.toml not found in skill directory.")
+            print(f"   Expected at: {self.pyproject_file}")
+            return False
+
+        # Run uv sync to create/update the venv from pyproject.toml + uv.lock
+        print("📦 Syncing dependencies with uv...")
+        try:
+            subprocess.run(
+                [uv_cmd, "sync"],
+                cwd=str(self.skill_dir),
+                check=True,
+            )
+            print("✅ Dependencies synced")
+
+            # Install Chrome for Patchright (not Chromium!)
+            # Using real Chrome ensures cross-platform reliability and consistent browser fingerprinting
+            # See: https://github.com/Kaliiiiiiiiii-Vinyzu/patchright-python#anti-detection
+            print("🌐 Installing Google Chrome for Patchright...")
             try:
-                # Upgrade pip first
                 subprocess.run(
-                    [str(self.venv_pip), "install", "--upgrade", "pip"],
+                    [str(self.venv_python), "-m", "patchright", "install", "chrome"],
                     check=True,
                     capture_output=True,
                     text=True
                 )
-
-                # Install requirements
-                result = subprocess.run(
-                    [str(self.venv_pip), "install", "-r", str(self.requirements_file)],
-                    check=True,
-                    capture_output=True,
-                    text=True
-                )
-                print("✅ Dependencies installed")
-
-                # Install Chrome for Patchright (not Chromium!)
-                # Using real Chrome ensures cross-platform reliability and consistent browser fingerprinting
-                # See: https://github.com/Kaliiiiiiiiii-Vinyzu/patchright-python#anti-detection
-                print("🌐 Installing Google Chrome for Patchright...")
-                try:
-                    subprocess.run(
-                        [str(self.venv_python), "-m", "patchright", "install", "chrome"],
-                        check=True,
-                        capture_output=True,
-                        text=True
-                    )
-                    print("✅ Chrome installed")
-                except subprocess.CalledProcessError as e:
-                    print(f"⚠️ Warning: Failed to install Chrome: {e}")
-                    print("   You may need to run manually: python -m patchright install chrome")
-                    print("   Chrome is required (not Chromium) for reliability!")
-
-                return True
+                print("✅ Chrome installed")
             except subprocess.CalledProcessError as e:
-                print(f"❌ Failed to install dependencies: {e}")
-                print(f"   Output: {e.output if hasattr(e, 'output') else 'No output'}")
-                return False
-        else:
-            print("⚠️ No requirements.txt found, skipping dependency installation")
+                print(f"⚠️ Warning: Failed to install Chrome: {e}")
+                if e.stdout:
+                    print("   --- patchright stdout ---")
+                    print(e.stdout)
+                if e.stderr:
+                    print("   --- patchright stderr ---")
+                    print(e.stderr)
+                print("   You may need to run manually: python -m patchright install chrome")
+                print("   Chrome is required (not Chromium) for reliability!")
+
             return True
+        except subprocess.CalledProcessError as e:
+            print(f"❌ Failed to sync dependencies: {e}")
+            return False
 
     def is_in_skill_venv(self) -> bool:
         """Check if we're already running in the skill's venv"""

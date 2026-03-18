@@ -1,0 +1,9 @@
+[project]
+name = "notebooklm-skill"
+version = "0.1.0"
+description = "Claude Code Skill for NotebookLM browser automation"
+requires-python = ">=3.12"
+dependencies = [
+    "patchright==1.55.2",
+    "python-dotenv==1.0.0",
+]

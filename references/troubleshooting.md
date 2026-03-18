@@ -187,11 +187,11 @@ python scripts/run.py [any_script].py
 #### Wrong Python version
 **Solution:**
 ```bash
-# Check Python version (needs 3.8+)
+# Check Python version (needs 3.12+)
 python --version
 
 # If wrong version, specify correct Python
-python3.8 scripts/run.py auth_manager.py status
+python3.12 scripts/run.py auth_manager.py status
 ```
 
 ### Network Issues

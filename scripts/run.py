@@ -6,6 +6,7 @@ Ensures all scripts run with the correct virtual environment
 
 import os
 import sys
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -24,23 +25,21 @@ def get_venv_python():
 
 
 def ensure_venv():
-    """Ensure virtual environment exists"""
+    """Ensure virtual environment exists and dependencies are synced via uv"""
     skill_dir = Path(__file__).parent.parent
-    venv_dir = skill_dir / ".venv"
     setup_script = skill_dir / "scripts" / "setup_environment.py"
 
-    # Check if venv exists
-    if not venv_dir.exists():
-        print("🔧 First-time setup: Creating virtual environment...")
-        print("   This may take a minute...")
+    uv_cmd = shutil.which("uv")
+    if not uv_cmd:
+        print("❌ uv is required but not found.")
+        print("   Install it from: https://docs.astral.sh/uv/getting-started/installation/")
+        sys.exit(1)
 
-        # Run setup with system Python
-        result = subprocess.run([sys.executable, str(setup_script)])
-        if result.returncode != 0:
-            print("❌ Failed to set up environment")
-            sys.exit(1)
-
-        print("✅ Environment ready!")
+    print("🔧 Syncing environment with uv...")
+    result = subprocess.run([sys.executable, str(setup_script)])
+    if result.returncode != 0:
+        print("❌ Failed to set up environment")
+        sys.exit(1)
 
     return get_venv_python()
 

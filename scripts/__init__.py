@@ -6,6 +6,7 @@ Provides automatic environment management for all scripts
 
 import os
 import sys
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -34,39 +35,57 @@ def ensure_venv_and_run():
     # We need to set up or switch to our venv
     if not venv_dir.exists():
         print("🔧 First-time setup detected...")
-        print("   Creating isolated environment for NotebookLM skill...")
+        print("   Creating isolated environment for NotebookLM skill via uv...")
         print("   This ensures clean dependency management...")
 
-        # Create venv
-        import venv
-        venv.create(venv_dir, with_pip=True)
+        uv_cmd = shutil.which("uv")
+        if not uv_cmd:
+            print("❌ uv is required but not found.")
+            print("   Install it from: https://docs.astral.sh/uv/getting-started/installation/")
+            sys.exit(1)
 
-        # Install requirements
-        requirements_file = skill_dir / "requirements.txt"
-        if requirements_file.exists():
-            if os.name == 'nt':  # Windows
-                pip_exe = venv_dir / "Scripts" / "pip.exe"
-            else:
-                pip_exe = venv_dir / "bin" / "pip"
-
-            print("   Installing dependencies in isolated environment...")
+        # Sync dependencies using uv (creates .venv and installs from pyproject.toml + uv.lock)
+        try:
             subprocess.run(
-                [str(pip_exe), "install", "-q", "-r", str(requirements_file)],
-                check=True
+                [uv_cmd, "sync"],
+                cwd=str(skill_dir),
+                check=True,
             )
+        except subprocess.CalledProcessError as e:
+            print("❌ Failed to set up environment using uv.")
+            print(f"   Command exited with status {e.returncode}.")
+            print(f"   Try running 'uv sync' manually in: {skill_dir}")
+            sys.exit(e.returncode or 1)
 
-            # Also install patchright's chromium
-            print("   Setting up browser automation...")
-            if os.name == 'nt':
-                python_exe = venv_dir / "Scripts" / "python.exe"
-            else:
-                python_exe = venv_dir / "bin" / "python"
+        # Also install Chrome for Patchright
+        print("   Setting up browser automation...")
+        if os.name == 'nt':
+            python_exe = venv_dir / "Scripts" / "python.exe"
+        else:
+            python_exe = venv_dir / "bin" / "python"
 
+        try:
             subprocess.run(
-                [str(python_exe), "-m", "patchright", "install", "chromium"],
+                [str(python_exe), "-m", "patchright", "install", "chrome"],
                 check=True,
                 capture_output=True
             )
+        except subprocess.CalledProcessError as e:
+            print("⚠️  Failed to install Chrome for Patchright. Continuing without browser setup.")
+            if e.stdout:
+                try:
+                    print("   patchright stdout:")
+                    print(e.stdout.decode(errors="replace"))
+                except AttributeError:
+                    print("   patchright stdout:")
+                    print(e.stdout)
+            if e.stderr:
+                try:
+                    print("   patchright stderr:")
+                    print(e.stderr.decode(errors="replace"))
+                except AttributeError:
+                    print("   patchright stderr:")
+                    print(e.stderr)
 
         print("✅ Environment ready! All dependencies isolated in .venv/")
 
