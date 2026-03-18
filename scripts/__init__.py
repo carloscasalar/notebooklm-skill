@@ -64,11 +64,28 @@ def ensure_venv_and_run():
         else:
             python_exe = venv_dir / "bin" / "python"
 
-        subprocess.run(
-            [str(python_exe), "-m", "patchright", "install", "chrome"],
-            check=True,
-            capture_output=True
-        )
+        try:
+            subprocess.run(
+                [str(python_exe), "-m", "patchright", "install", "chrome"],
+                check=True,
+                capture_output=True
+            )
+        except subprocess.CalledProcessError as e:
+            print("⚠️  Failed to install Chrome for Patchright. Continuing without browser setup.")
+            if e.stdout:
+                try:
+                    print("   patchright stdout:")
+                    print(e.stdout.decode(errors="replace"))
+                except AttributeError:
+                    print("   patchright stdout:")
+                    print(e.stdout)
+            if e.stderr:
+                try:
+                    print("   patchright stderr:")
+                    print(e.stderr.decode(errors="replace"))
+                except AttributeError:
+                    print("   patchright stderr:")
+                    print(e.stderr)
 
         print("✅ Environment ready! All dependencies isolated in .venv/")
 
