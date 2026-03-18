@@ -182,10 +182,8 @@ The virtual environment is automatically managed:
 
 Manual setup (only if automatic fails):
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Linux/Mac
-pip install -r requirements.txt
-python -m patchright install chromium
+uv sync
+python -m patchright install chrome
 ```
 
 ## Data Storage

@@ -4,7 +4,7 @@
 
 **Let [Claude Code](https://github.com/anthropics/claude-code) chat directly with NotebookLM for source-grounded answers based exclusively on your uploaded documents**
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
 [![Claude Code Skill](https://img.shields.io/badge/Claude%20Code-Skill-purple.svg)](https://www.anthropic.com/news/skills)
 [![Based on](https://img.shields.io/badge/Based%20on-NotebookLM%20MCP-green.svg)](https://github.com/PleasePrompto/notebooklm-mcp)
 [![GitHub](https://img.shields.io/github/stars/PleasePrompto/notebooklm-skill?style=social)](https://github.com/PleasePrompto/notebooklm-skill)
@@ -81,12 +81,12 @@ git clone https://github.com/PleasePrompto/notebooklm-skill notebooklm
 ```
 
 When you first use the skill, it automatically:
-- Creates an isolated Python environment (`.venv`)
+- Creates an isolated Python environment (`.venv`) via **uv**
 - Installs all dependencies including **Google Chrome**
 - Sets up browser automation with Chrome (not Chromium) for maximum reliability
 - Everything stays contained in the skill folder
 
-**Note:** The setup uses real Chrome instead of Chromium for cross-platform reliability, consistent browser fingerprinting, and better anti-detection with Google services
+**Note:** `uv` must be installed on your system. Install it from [docs.astral.sh/uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ---
 
@@ -256,7 +256,7 @@ Note: The MCP server uses the same Patchright library but via TypeScript/npm eco
 ### Dependencies
 - **patchright==1.55.2**: Browser automation
 - **python-dotenv==1.0.0**: Environment configuration
-- Automatically installed in `.venv` on first use
+- Automatically installed in `.venv` via `uv sync` on first use
 
 ### Data Storage
 
@@ -345,9 +345,7 @@ Say: `"Clear NotebookLM browser data"`
 # Manual reinstall if needed
 cd ~/.claude/skills/notebooklm
 rm -rf .venv
-python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-pip install -r requirements.txt
+uv sync
 ```
 
 ---
