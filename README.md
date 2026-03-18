@@ -342,10 +342,12 @@ Say: `"Clear NotebookLM browser data"`
 
 ### Dependencies issues
 ```bash
-# Manual reinstall if needed
+# Manual reinstall if needed (run from the skill repo containing pyproject.toml)
 cd ~/.claude/skills/notebooklm
 rm -rf .venv
 uv sync
+# Reinstall Patchright's browser (Chrome) in the new virtual environment
+uv run patchright install-browser
 ```
 
 ---
